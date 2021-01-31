@@ -23,7 +23,7 @@
 </main>
 
 <!-- Styles -->
-<style>
+<!--<style>
 	main {
 		text-align: center;
 		padding: 1em;
@@ -47,4 +47,4 @@
 			max-width: none;
 		}
 	}
-</style>
+</style>-->

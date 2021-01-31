@@ -15,16 +15,13 @@
 
 	// App.svelte
 	import { playerName } from "../store.js";
+	import Header from "./_components/Header.svelte";
 </script>
 
 <main>
 	<!-- 1. 🔥 Firebase App -->
 	<FirebaseApp {firebase}>
-		<h1>megauno</h1>
-
-		{#if $playerName}
-			<h2>You are {$playerName}</h2>
-		{/if}
+		<Header />
 
 		<Collection
 			path={"games/"}
@@ -38,7 +35,7 @@
 				Game id: {game.id}
 
 				<p>
-					Document created at
+					Game created at
 					<em>{new Date(game.createdAt).toLocaleString()}</em>
 				</p>
 
@@ -61,34 +58,10 @@
 						.then((docRef) => {
 							$goto(`/game/${docRef.id}`);
 						});
-				}}> Create Game </button>
+				}}
+			>
+				Create Game
+			</button>
 		</Collection>
 	</FirebaseApp>
 </main>
-
-<!-- Styles -->
-<style>
-	main {
-		text-align: center;
-		padding: 1em;
-		max-width: 240px;
-		margin: 0 auto;
-	}
-
-	h1,
-	em {
-		color: #ff3e00;
-	}
-
-	hr {
-		height: 1px;
-		border: none;
-		background: rgb(195, 195, 195);
-	}
-
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
-	}
-</style>

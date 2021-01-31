@@ -11,6 +11,7 @@
 	import Deck from "./_components/Deck.svelte";
 	import DiscardPile from "./_components/DiscardPile.svelte";
 	import Hand from "./_components/Hand.svelte";
+	import Header from "./../_components/Header.svelte";
 
 	import { metatags } from "@roxi/routify";
 	metatags.title = `Game ${game.title}`;
@@ -229,28 +230,11 @@
 	}
 </script>
 
-{JSON.stringify(game)}
+<!-- {JSON.stringify(game)} -->
+
+<Header />
 
 <h1 contenteditable="true" bind:innerHTML={title}>{game.title}</h1>
-{#if !submit && !$playerName}
-	<h2>Who are you?</h2>
-	<form on:submit|preventDefault={handleSubmit}>
-		<input
-			type="text"
-			bind:value={playerNameLocal}
-			on:keyup|preventDefault={handleKeyup}
-		/>
-		<button type="submit"> Submit </button>
-	</form>
-{:else}
-	<h2>You are {$playerName}</h2>
-	<button
-		on:click={() => {
-			submit = false;
-			$playerName = "";
-		}}>Change Name</button
-	>
-{/if}
 
 <Collection
 	path={gameRef.collection("players")}
@@ -293,7 +277,10 @@
 					createdAt: Date.now(),
 				});
 				$gamesIAmIn = [key, ...$gamesIAmIn];
-			}}> Join game! </button>
+			}}
+		>
+			Join game!
+		</button>
 	{:else if players.length > 0 && game.started == false}
 		<button on:click={startGame(playersRef)}>Start game!</button>
 	{/if}
