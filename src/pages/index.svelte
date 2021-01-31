@@ -14,7 +14,7 @@
 	import { goto } from "@roxi/routify";
 
 	// App.svelte
-	import { playerName } from "../store.js";
+	import { autojoin, playerName } from "../store.js";
 	import Header from "./_components/Header.svelte";
 </script>
 
@@ -42,7 +42,7 @@
 				<button
 					on:click={() => {
 						$goto(`/game/${game.id}`);
-					}}>Join Game</button
+					}}>Go to Game</button
 				>
 			{/each}
 			<span slot="loading">Loading games...</span>
@@ -56,7 +56,8 @@
 							started: false,
 						})
 						.then((docRef) => {
-							$goto(`/game/${docRef.id}`);
+							$autojoin = true;
+							$goto(`/game/${docRef.id}`); // don't use "autojoin" in url because it can do weird things on reload
 						});
 				}}
 			>

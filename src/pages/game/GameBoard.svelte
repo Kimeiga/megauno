@@ -14,15 +14,16 @@
 	import Header from "./../_components/Header.svelte";
 
 	import { metatags } from "@roxi/routify";
+	import { params } from "@roxi/routify";
 	metatags.title = `Game ${game.title}`;
 	metatags.description = "The game";
 
 	import { Collection } from "sveltefire";
 
-	import { playerName, gamesIAmIn } from "../../store";
-	// playerName.useLocalStorage();
-	// gamesIAmIn.useLocalStorage();
+	import { playerName, gamesIAmIn, autojoin } from "../../store";
 	import firebase from "firebase/app";
+	import PlayerList from "./_components/PlayerList.svelte";
+	import { onMount } from "svelte";
 
 	const db = firebase.firestore();
 
@@ -37,6 +38,25 @@
 
 		// }, 250);
 	}
+	onMount(() => {
+		if ($autojoin) {
+			// if you aren't already in the game, join immediately
+			// (this is for people who are creating the game from scratch)
+			joinGame();
+			$autojoin = false;
+		}
+	});
+
+	const joinGame = () => {
+		while (!$playerName) {
+			$playerName = prompt("Enter your name:");
+		}
+		playersRef.add({
+			name: $playerName,
+			createdAt: Date.now(),
+		});
+		$gamesIAmIn = [key, ...$gamesIAmIn];
+	};
 
 	function onData(e) {
 		players = e.detail.data;
@@ -140,7 +160,7 @@
 		}
 	}
 
-	async function startGame(playersRef) {
+	async function startGame() {
 		playersRef
 			.orderBy("createdAt")
 			.limit(1)
@@ -232,7 +252,7 @@
 
 <!-- {JSON.stringify(game)} -->
 
-<Header />
+<Header showChangeButton={false} />
 
 <h1 contenteditable="true" bind:innerHTML={title}>{game.title}</h1>
 
@@ -249,41 +269,14 @@
 
 	<span slot="loading">Loading players...</span>
 
-	{#if !players.length}
-		<p>No players yet...</p>
-	{/if}
-
-	{#each players as player}
-		<p>
-			{#if $playerName == player.name}
-				{#if player.id == game.currentPlayerID}
-					Current Player: You: {player.name}
-				{:else}
-					You: {player.name}
-				{/if}
-			{:else if player.id == game.currentPlayerID}
-				Current Player: {player.name}
-			{:else}
-				{player.name}
-			{/if}
-		</p>
-	{/each}
-
-	{#if !$gamesIAmIn.includes(key) && game.started == false}
-		<button
-			on:click={() => {
-				playersRef.add({
-					name: $playerName,
-					createdAt: Date.now(),
-				});
-				$gamesIAmIn = [key, ...$gamesIAmIn];
-			}}
-		>
-			Join game!
-		</button>
-	{:else if players.length > 0 && game.started == false}
-		<button on:click={startGame(playersRef)}>Start game!</button>
-	{/if}
+	<PlayerList
+		{players}
+		{playersRef}
+		{key}
+		{game}
+		{joinGame}
+		on:startGame={startGame}
+	/>
 
 	<!-- game started area -->
 

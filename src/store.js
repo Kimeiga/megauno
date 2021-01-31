@@ -19,5 +19,7 @@ const createWritableStore = (key, startValue) => {
 	};
 }
 
-export const playerName = createWritableStore('playerName', ""),
-	gamesIAmIn = createWritableStore('gamesIAmIn', [])
+export const
+	playerName = createWritableStore('playerName', ""),
+	gamesIAmIn = createWritableStore('gamesIAmIn', []),
+	autojoin = writable(false);

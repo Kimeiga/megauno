@@ -1,46 +1,27 @@
 <script>
-	let playerNameLocal;
+	// to discourage players from changing their name during the game
+	// and causing bugs LMAO
+	export let showChangeButton = true;
 
-	let submit = false;
-	import { playerName, gamesIAmIn } from "../../store";
-	const handleSubmit = () => {
-		submit = true;
-		$playerName = playerNameLocal;
-	};
+	import { playerName } from "../../store";
 
-	const handleKeyup = () => {
-		submit = false;
-
-		if (event.code == "Enter") {
-			event.preventDefault();
-			handleSubmit();
-		}
+	const changeName = () => {
+		$playerName = prompt("Enter your name:") ?? $playerName;
 	};
 </script>
 
 <header>
-	<h1>megauno</h1>
+	<a href="/"><h1>megauno</h1></a>
 
-	{#if !submit && !$playerName}
-		<div class="right-side" id="who-are-you">
-			<h2>Who are you?</h2>
-			<form on:submit|preventDefault={handleSubmit}>
-				<input
-					type="text"
-					bind:value={playerNameLocal}
-					on:keyup|preventDefault={handleKeyup}
-				/>
-				<button type="submit"> Submit </button>
-			</form>
+	{#if !$playerName}
+		<div class="right-side">
+			<button on:click={changeName}>Who are you?</button>
 		</div>
 	{:else}
 		<h2 class="right-side">You = {$playerName}</h2>
-		<button
-			on:click={() => {
-				submit = false;
-				$playerName = "";
-			}}>Change</button
-		>
+		{#if showChangeButton}
+			<button on:click={changeName}>Change</button>
+		{/if}
 	{/if}
 </header>
 
@@ -52,7 +33,7 @@
 		background: aqua;
 
 		display: flex;
-		align-items: baseline;
+		align-items: center;
 	}
 
 	header h1 {
@@ -66,14 +47,5 @@
 	header .right-side {
 		margin: 0;
 		margin-left: auto;
-	}
-
-	#who-are-you {
-		display: flex;
-		flex-direction: column;
-	}
-
-	#who-are-you * {
-		display: block;
 	}
 </style>
