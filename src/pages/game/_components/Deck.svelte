@@ -7,7 +7,7 @@
 <h4>deck</h4>
 
 <div class="deck" on:click={deckClickHandler}>
-	{#each deck as card (card.value + card.suit)}
+	{#each deck as card (card.value + card.suit + card.deckNumber)}
 		<div class="facedown-card" />
 	{/each}
 </div>

@@ -16,7 +16,7 @@
 
 <h4>discardPile</h4>
 <div class="deck">
-	{#each deck as card}
+	{#each deck as card (card.value + card.suit + card.deckNumber)}
 		<div class="faceup-card">
 			{card.value}{getSuitSymbol(card.suit)}
 		</div>

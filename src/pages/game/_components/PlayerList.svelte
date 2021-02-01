@@ -33,8 +33,10 @@
 	{/each}
 {/if}
 
-{#if !$gamesIAmIn[key] && game.started == false}
-	<button on:click={joinGame}>Join game!</button>
+{#if !$gamesIAmIn[key]}
+	<button on:click={joinGame}
+		>Join game {game.started ? "(in progress)" : ""}!</button
+	>
 {:else if players.length > 0 && game.started == false}
 	<button
 		on:click={() => {

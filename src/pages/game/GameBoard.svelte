@@ -7,6 +7,8 @@
 	let title;
 	let playerID;
 
+	const startingHandSize = 7;
+
 	metatags.title = `Game ${game.title}`;
 	metatags.description = "The game";
 
@@ -18,6 +20,7 @@
 	import firebase from "firebase/app";
 	import PlayerList from "./_components/PlayerList.svelte";
 	import { onDestroy, onMount } from "svelte";
+	import Inspect from "svelte-inspect";
 
 	const db = firebase.firestore();
 
@@ -54,13 +57,16 @@
 	});
 
 	const joinGame = async () => {
-		let newName = prompt("Enter your name:");
-		if (newName) {
-			$playerName = newName;
-		} else {
-			// they just exited out of the dialog or entered nothing
-			// just go back as if nothing happened
-			return;
+		// if they don't have a name prompt them for a name
+		if (!$playerName) {
+			let newName = prompt("Enter your name:");
+			if (newName) {
+				$playerName = newName;
+			} else {
+				// they just exited out of the dialog or entered nothing
+				// just go back as if nothing happened
+				return;
+			}
 		}
 
 		// before we add this player, if there is already a player in the
@@ -87,19 +93,95 @@
 			}
 		});
 
-		playersRef
-			.add({
-				name: $playerName,
-				createdAt: Date.now(),
-				disconnected: false,
-			})
-			.then((docRef) => {
-				playerID = docRef.id;
-			});
+		const newPlayer = await playersRef.add({
+			name: $playerName,
+			createdAt: Date.now(),
+			disconnected: false,
+			hand: [],
+		});
+
+		playerID = newPlayer.id;
+		// const docSnap = await playersRef.get()
+
+		// playersRef
+		// 	.add({
+		// 		name: $playerName,
+		// 		createdAt: Date.now(),
+		// 		disconnected: false,
+		// 	})
+		// 	.then(function (docRef) {
+		// 		playerID = docRef.id;
+		// 		console.log(playerID);
+		// 	})
+		// 	.catch((e) => console.error(e));
 		$gamesIAmIn[key] = $playerName;
+
+		if (game.started) {
+			// you are joining a game in progress and need to be dealt in!!
+			// give startingHandSize cards to you
+			let deck = game.deck;
+
+			if (deck.length >= startingHandSize) {
+				let newHand = deck.splice(0, startingHandSize);
+				playersRef.doc(playerID).update({ hand: newHand });
+				gameRef.update({ deck });
+			} else if (deck.length > 0) {
+				// give the deck to me, reshuffle the discard pile into the deck, and deal me the remaining cards
+				let newHand = deck;
+				deck = [];
+				debugger;
+				console.log(game.discardPile);
+
+				reshuffleDiscardPileIntoDeck(deck);
+
+				if (deck.length >= startingHandSize - newHand.length) {
+					newHand += deck.splice(0, startingHandSize - newHand.length);
+					playersRef.doc(playerID).update({ hand: newHand });
+					gameRef.update({ deck });
+				} else {
+					// oh no we have to introduce new cards (by addings cards from another deck haha)\
+					let numberOfDecks = game.numberOfDecks;
+					// keep adding decks if its not enough
+					while (deck.length < (players.length + 1) * startingHandSize + 1) {
+						deck = addADeck(deck, numberOfDecks);
+						numberOfDecks++;
+					}
+					// gameRef.update({ numberOfDecks: numberOfDecks, deck });
+					console.log(playerID);
+
+					newHand.push(...deck.splice(0, startingHandSize - newHand.length));
+					playersRef.doc(playerID).update({ hand: newHand });
+					gameRef.update({ deck, numberOfDecks: numberOfDecks });
+				}
+			}
+		}
 	};
 
-	function endTurn(playersRef) {
+	// when the deck runs out of cards, take all the discard pile except the top card and reshuffle it into the deck
+	const reshuffleDiscardPileIntoDeck = (deck) => {
+		// let deck = game.deck;
+		let discardPile = game.discardPile;
+		let topOfDiscardPile = discardPile.pop();
+
+		if (!discardPile.length) {
+			// if the discard pile was just one card, we have to return, there's nothing we can do
+			return;
+		}
+
+		shuffle(discardPile);
+		deck = discardPile;
+
+		gameRef.update({ deck, discardPile: topOfDiscardPile });
+	};
+
+	function addADeck(deck, currentDeckNumber) {
+		let newDeck = getDeck(currentDeckNumber + 1);
+		shuffle(newDeck);
+		deck = deck.concat(newDeck);
+		return deck;
+	}
+
+	function endTurn() {
 		let newPlayerIndex = (game.currentPlayerIndex + 1) % players.length;
 
 		playersRef
@@ -118,29 +200,31 @@
 			});
 	}
 
-	const suits = ["spades", "diamonds", "clubs", "hearts"];
-	const values = [
-		"A",
-		"2",
-		"3",
-		"4",
-		"5",
-		"6",
-		"7",
-		"8",
-		"9",
-		"10",
-		"J",
-		"Q",
-		"K",
-	];
+	// const suits = ["spades", "diamonds", "clubs", "hearts"];
+	// const values = [
+	// 	"A",
+	// 	"2",
+	// 	"3",
+	// 	"4",
+	// 	"5",
+	// 	"6",
+	// 	"7",
+	// 	"8",
+	// 	"9",
+	// 	"10",
+	// 	"J",
+	// 	"Q",
+	// 	"K",
+	// ];
+	const suits = ["spades"];
+	const values = ["A", "2"];
 
-	function getDeck() {
+	function getDeck(deckNumber) {
 		var deck = new Array();
 
 		for (var i = 0; i < suits.length; i++) {
 			for (var x = 0; x < values.length; x++) {
-				var card = { value: values[x], suit: suits[i] };
+				var card = { value: values[x], suit: suits[i], deckNumber };
 				deck.push(card);
 			}
 		}
@@ -162,6 +246,7 @@
 	}
 
 	async function startGame() {
+		debugger;
 		playersRef
 			.orderBy("createdAt")
 			.limit(1)
@@ -179,18 +264,26 @@
 			});
 
 		// give cards to everyone
-		let deck = getDeck();
+		let deck = getDeck(1);
 		shuffle(deck);
 
-		// give 7 cards to everyone, assume deck has enough
+		let numberOfDecks = 1;
+
+		// keep adding decks if its not enough
+		while (deck.length < (players.length + 1) * startingHandSize + 1) {
+			deck = addADeck(deck, numberOfDecks);
+			numberOfDecks++;
+		}
+
+		// give startingHandSize cards to everyone, assume deck has enough
 		players.forEach((player) => {
-			let newHand = deck.splice(0, 7);
+			let newHand = deck.splice(0, startingHandSize);
 			playersRef.doc(player.id).update({ hand: newHand });
 		});
 
 		// put the rest in the deck
 		let discardPile = deck.splice(0, 1);
-		gameRef.update({ deck, discardPile });
+		gameRef.update({ deck, discardPile, numberOfDecks });
 	}
 
 	function cardClickHandler(card, hand) {
@@ -251,7 +344,7 @@
 	}
 </script>
 
-<h1 contenteditable="true" bind:innerHTML={title}>{game.title}</h1>
+<h1 contenteditable="true" bind:textContent={title}>{game.title}</h1>
 
 <PlayerList
 	{players}
@@ -283,3 +376,5 @@
 		/>
 	{/each}
 {/if}
+<hr />
+<Inspect {title} {game} {players} {key} {playerID} />

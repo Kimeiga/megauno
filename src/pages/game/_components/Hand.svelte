@@ -11,7 +11,7 @@
 
 <h4>{playerName}'s hand</h4>
 <div class="deck">
-	{#each deck as card}
+	{#each deck as card (card.value + card.suit + card.deckNumber)}
 		<HandCard {card} {faceUp} {discardPileTop} {cardClickHandler} hand={deck} />
 		<!-- <Hoverable let:hovering={active}>
 			<div class:active>
