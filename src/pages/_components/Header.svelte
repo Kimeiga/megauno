@@ -11,14 +11,14 @@
 </script>
 
 <header>
-	<a href="/"><h1>megauno</h1></a>
+	<a href="/"><h1>🎴megauno</h1></a>
 
 	{#if !$playerName}
 		<div class="right-side">
-			<button on:click={changeName}>Who are you?</button>
+			<button on:click={changeName}>Who are you? 🤷</button>
 		</div>
 	{:else}
-		<h2 class="right-side">You = {$playerName}</h2>
+		<h2 class="right-side">💁 {$playerName}</h2>
 		{#if showChangeButton}
 			<button on:click={changeName}>Change</button>
 		{/if}

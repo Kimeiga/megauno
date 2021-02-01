@@ -21,5 +21,5 @@ const createWritableStore = (key, startValue) => {
 
 export const
 	playerName = createWritableStore('playerName', ""),
-	gamesIAmIn = createWritableStore('gamesIAmIn', []),
+	gamesIAmIn = createWritableStore('gamesIAmIn', {}), // it should be a dictionary so it can be accessed by key (game id)
 	autojoin = writable(false);

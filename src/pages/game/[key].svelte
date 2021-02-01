@@ -1,23 +1,34 @@
 <script>
 	export let key;
-	let gameName;
 
-	import { FirebaseApp, Doc } from "sveltefire";
+	import { FirebaseApp, Doc, Collection } from "sveltefire";
 
 	import firebase from "firebase/app";
 	import GameBoard from "./GameBoard.svelte";
+	import Header from "./../_components/Header.svelte";
 </script>
 
 <main>
-	<!-- 1. 🔥 Firebase App -->
 	<FirebaseApp {firebase}>
-		<Doc
-			path={`games/${key}`}
-			let:data={game}
-			bind:data={gameName}
-			let:ref={gameRef}
-		>
-			<GameBoard {game} {gameRef} {key} />
+		<Header showChangeButton={false} />
+
+		<Doc path={`games/${key}`} let:data={game} let:ref={gameRef} let:error>
+			<Collection
+				path={gameRef.collection("players")}
+				query={(ref) => ref.orderBy("createdAt")}
+				let:data={players}
+				let:ref={playersRef}
+			>
+				<GameBoard {game} {gameRef} {players} {playersRef} {key} />
+				<span slot="loading">⌛ Loading players...</span>
+				<div slot="fallback">
+					😔 Player list cannot be read. Error: {error}
+				</div>
+			</Collection>
+			<div slot="loading">⌛ Game loading!</div>
+			<div slot="fallback">
+				😔 This game cannot be found. Error: {error}
+			</div>
 		</Doc>
 	</FirebaseApp>
 </main>

@@ -1,43 +1,32 @@
 <script>
 	export let game;
 	export let gameRef;
+	export let players;
+	export let playersRef;
 	export let key; // game id
 	let title;
-	let playerNameLocal;
-	let submit = false;
-	let players;
-	let playersRef;
+	let playerID;
+
+	metatags.title = `Game ${game.title}`;
+	metatags.description = "The game";
 
 	import Deck from "./_components/Deck.svelte";
 	import DiscardPile from "./_components/DiscardPile.svelte";
 	import Hand from "./_components/Hand.svelte";
-	import Header from "./../_components/Header.svelte";
-
 	import { metatags } from "@roxi/routify";
-	import { params } from "@roxi/routify";
-	metatags.title = `Game ${game.title}`;
-	metatags.description = "The game";
-
-	import { Collection } from "sveltefire";
-
 	import { playerName, gamesIAmIn, autojoin } from "../../store";
 	import firebase from "firebase/app";
 	import PlayerList from "./_components/PlayerList.svelte";
-	import { onMount } from "svelte";
+	import { onDestroy, onMount } from "svelte";
 
 	const db = firebase.firestore();
 
-	$: {
-		// debounce(function () {
-		// send new title to firestore
-		if (title) {
-			db.collection("games").doc(key).update({
-				title: title,
-			});
-		}
-
-		// }, 250);
+	$: if (title) {
+		db.collection("games").doc(key).update({
+			title: title,
+		});
 	}
+
 	onMount(() => {
 		if ($autojoin) {
 			// if you aren't already in the game, join immediately
@@ -45,57 +34,69 @@
 			joinGame();
 			$autojoin = false;
 		}
+
+		// if you are in the game
+		if ($gamesIAmIn[key]) {
+			// get player id again
+			players.forEach((player) => {
+				if (player.name === $playerName) {
+					playerID = player.id;
+				}
+			});
+			playersRef.doc(playerID).update({ disconnected: false });
+		}
 	});
 
-	const joinGame = () => {
-		while (!$playerName) {
-			$playerName = prompt("Enter your name:");
+	onDestroy(() => {
+		if (playerID) {
+			playersRef.doc(playerID).update({ disconnected: true });
 		}
-		playersRef.add({
-			name: $playerName,
-			createdAt: Date.now(),
+	});
+
+	const joinGame = async () => {
+		let newName = prompt("Enter your name:");
+		if (newName) {
+			$playerName = newName;
+		} else {
+			// they just exited out of the dialog or entered nothing
+			// just go back as if nothing happened
+			return;
+		}
+
+		// before we add this player, if there is already a player in the
+		// game that is named this (and who is not disconnected)
+		// add them with a "1" at the end (increment)
+		await players.forEach((player) => {
+			if ($playerName == player.name) {
+				// name collision
+				if (!player.disconnected) {
+					debugger;
+					// if they are disconnected, you can claim them
+					// if they are not, your name needs to be changed
+					let tempName = $playerName.slice(0, $playerName.length - 1);
+					let lastCharNumber = parseInt($playerName[$playerName.length - 1]);
+					if (!isNaN(lastCharNumber)) {
+						// last character is number
+						tempName += lastCharNumber++;
+						$playerName = tempName;
+					} else {
+						// we have to add a 1 to the end
+						$playerName += "1";
+					}
+				}
+			}
 		});
-		$gamesIAmIn = [key, ...$gamesIAmIn];
-	};
 
-	function onData(e) {
-		players = e.detail.data;
-	}
-	function onRef(e) {
-		playersRef = e.detail.ref;
-	}
-
-	const debounce = (func, wait) => {
-		// Originally inspired by  David Walsh (https://davidwalsh.name/javascript-debounce-function)
-
-		// Returns a function, that, as long as it continues to be invoked, will not
-		// be triggered. The function will be called after it stops being called for
-		// `wait` milliseconds.
-		let timeout;
-
-		return function executedFunction(...args) {
-			const later = () => {
-				clearTimeout(timeout);
-				func(...args);
-			};
-
-			clearTimeout(timeout);
-			timeout = setTimeout(later, wait);
-		};
-	};
-
-	const handleSubmit = () => {
-		submit = true;
-		$playerName = playerNameLocal;
-	};
-
-	const handleKeyup = () => {
-		submit = false;
-
-		if (event.code == "Enter") {
-			event.preventDefault();
-			handleSubmit();
-		}
+		playersRef
+			.add({
+				name: $playerName,
+				createdAt: Date.now(),
+				disconnected: false,
+			})
+			.then((docRef) => {
+				playerID = docRef.id;
+			});
+		$gamesIAmIn[key] = $playerName;
 	};
 
 	function endTurn(playersRef) {
@@ -250,53 +251,35 @@
 	}
 </script>
 
-<!-- {JSON.stringify(game)} -->
-
-<Header showChangeButton={false} />
-
 <h1 contenteditable="true" bind:innerHTML={title}>{game.title}</h1>
 
-<Collection
-	path={gameRef.collection("players")}
-	query={(ref) => ref.orderBy("createdAt")}
-	let:data={players}
-	let:ref={playersRef}
-	on:data={onData}
-	on:ref={onRef}
-	log
->
-	<!-- {Object.entries(players[0])} -->
+<PlayerList
+	{players}
+	{playersRef}
+	{key}
+	{game}
+	{joinGame}
+	on:startGame={startGame}
+/>
 
-	<span slot="loading">Loading players...</span>
+<!-- game started area -->
 
-	<PlayerList
-		{players}
-		{playersRef}
-		{key}
-		{game}
-		{joinGame}
-		on:startGame={startGame}
-	/>
-
-	<!-- game started area -->
-
-	{#if game.started}
-		{#if $playerName == game.currentPlayerName}
-			<h3>It's your turn!</h3>
-			<button on:click={endTurn(playersRef)}>End Turn</button>
-		{/if}
-		{game.deck.length}
-		<Deck deck={game.deck} {deckClickHandler} />
-		<DiscardPile deck={game.discardPile} />
-
-		{#each players as player}
-			<Hand
-				deck={player.hand}
-				playerName={player.name}
-				faceUp={player.name == $playerName}
-				discardPileTop={game.discardPile[game.discardPile.length - 1]}
-				{cardClickHandler}
-			/>
-		{/each}
+{#if game.started}
+	{#if $playerName == game.currentPlayerName && $gamesIAmIn[key]}
+		<h3>It's your turn!</h3>
+		<button on:click={endTurn(playersRef)}>End Turn</button>
 	{/if}
-</Collection>
+	<Deck deck={game.deck} {deckClickHandler} />
+	Deck size: {game.deck.length}
+	<DiscardPile deck={game.discardPile} />
+
+	{#each players as player}
+		<Hand
+			deck={player.hand}
+			playerName={player.name}
+			faceUp={player.name == $playerName}
+			discardPileTop={game.discardPile[game.discardPile.length - 1]}
+			{cardClickHandler}
+		/>
+	{/each}
+{/if}

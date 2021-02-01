@@ -51,7 +51,7 @@
 				on:click={() => {
 					gamesRef
 						.add({
-							title: "Game",
+							title: "Game Title",
 							createdAt: Date.now(),
 							started: false,
 						})

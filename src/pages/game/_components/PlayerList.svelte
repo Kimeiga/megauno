@@ -19,19 +19,21 @@
 			{#if $playerName == player.name}
 				{#if player.id == game.currentPlayerID}
 					Current Player: You: {player.name}
+					{player.disconnected ? "(disconnected)" : ""}
 				{:else}
-					You: {player.name}
+					You: {player.name} {player.disconnected ? "(disconnected)" : ""}
 				{/if}
 			{:else if player.id == game.currentPlayerID}
 				Current Player: {player.name}
+				{player.disconnected ? "(disconnected)" : ""}
 			{:else}
-				{player.name}
+				{player.name} {player.disconnected ? "(disconnected)" : ""}
 			{/if}
 		</p>
 	{/each}
 {/if}
 
-{#if !$gamesIAmIn.includes(key) && game.started == false}
+{#if !$gamesIAmIn[key] && game.started == false}
 	<button on:click={joinGame}>Join game!</button>
 {:else if players.length > 0 && game.started == false}
 	<button
