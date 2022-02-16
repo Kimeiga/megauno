@@ -30,7 +30,7 @@ const serve = () => ({
             entrypoint: `${assetsDir}/__app.html`,
             script: `${buildDir}/main.js`
         }
-        spassr({ ...options, port: 5000 })
+        spassr({ ...options, port: 5001 })
         spassr({ ...options, ssr: true, port: 5005, ssrOptions: { inlineDynamicImports: true, dev: true } })
     }
 })

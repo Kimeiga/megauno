@@ -7,6 +7,9 @@
 	let title;
 	let playerID;
 
+	let expression;
+	let expressionValue;
+
 	const startingHandSize = 7;
 
 	metatags.title = `Game ${game.title}`;
@@ -21,6 +24,8 @@
 	import PlayerList from "./_components/PlayerList.svelte";
 	import { onDestroy, onMount } from "svelte";
 	import Inspect from "svelte-inspect";
+
+	import { evaluate } from "mathjs";
 
 	const db = firebase.firestore();
 
@@ -56,6 +61,17 @@
 		}
 	});
 
+	function validateExpression() {
+		// `\d(1,2){+-*/%^}\d(1,2)`
+		// `{+-*/%^}\d(1,2)`
+		// '1+2+3'
+		// '3+3'
+		// '6'
+
+		// '4+5/6'
+		if (expression) expressionValue = evaluate(expression);
+	}
+
 	const joinGame = async () => {
 		// if they don't have a name prompt them for a name
 		if (!$playerName) {
@@ -80,7 +96,9 @@
 					// if they are disconnected, you can claim them
 					// if they are not, your name needs to be changed
 					let tempName = $playerName.slice(0, $playerName.length - 1);
-					let lastCharNumber = parseInt($playerName[$playerName.length - 1]);
+					let lastCharNumber = parseInt(
+						$playerName[$playerName.length - 1]
+					);
 					if (!isNaN(lastCharNumber)) {
 						// last character is number
 						tempName += lastCharNumber++;
@@ -135,21 +153,29 @@
 				reshuffleDiscardPileIntoDeck(deck);
 
 				if (deck.length >= startingHandSize - newHand.length) {
-					newHand += deck.splice(0, startingHandSize - newHand.length);
+					newHand += deck.splice(
+						0,
+						startingHandSize - newHand.length
+					);
 					playersRef.doc(playerID).update({ hand: newHand });
 					gameRef.update({ deck });
 				} else {
 					// oh no we have to introduce new cards (by addings cards from another deck haha)\
 					let numberOfDecks = game.numberOfDecks;
 					// keep adding decks if its not enough
-					while (deck.length < (players.length + 1) * startingHandSize + 1) {
+					while (
+						deck.length <
+						(players.length + 1) * startingHandSize + 1
+					) {
 						deck = addADeck(deck, numberOfDecks);
 						numberOfDecks++;
 					}
 					// gameRef.update({ numberOfDecks: numberOfDecks, deck });
 					console.log(playerID);
 
-					newHand.push(...deck.splice(0, startingHandSize - newHand.length));
+					newHand.push(
+						...deck.splice(0, startingHandSize - newHand.length)
+					);
 					playersRef.doc(playerID).update({ hand: newHand });
 					gameRef.update({ deck, numberOfDecks: numberOfDecks });
 				}
@@ -190,7 +216,8 @@
 			.then((querySnapshot) => {
 				// console.log(querySnapshot.docs[0].ref.id);
 				let newPlayerID = querySnapshot.docs[newPlayerIndex].ref.id;
-				let newPlayerName = querySnapshot.docs[newPlayerIndex].data().name;
+				let newPlayerName =
+					querySnapshot.docs[newPlayerIndex].data().name;
 				gameRef.update({
 					started: true,
 					currentPlayerID: newPlayerID,
@@ -200,24 +227,24 @@
 			});
 	}
 
-	// const suits = ["spades", "diamonds", "clubs", "hearts"];
-	// const values = [
-	// 	"A",
-	// 	"2",
-	// 	"3",
-	// 	"4",
-	// 	"5",
-	// 	"6",
-	// 	"7",
-	// 	"8",
-	// 	"9",
-	// 	"10",
-	// 	"J",
-	// 	"Q",
-	// 	"K",
-	// ];
-	const suits = ["spades"];
-	const values = ["A", "2"];
+	const suits = ["spades", "diamonds", "clubs", "hearts"];
+	const values = [
+		"A",
+		"2",
+		"3",
+		"4",
+		"5",
+		"6",
+		"7",
+		"8",
+		"9",
+		"10",
+		"J",
+		"Q",
+		"K",
+	];
+	// const suits = ["spades"];
+	// const values = ["A", "2"];
 
 	function getDeck(deckNumber) {
 		var deck = new Array();
@@ -269,11 +296,11 @@
 
 		let numberOfDecks = 1;
 
-		// keep adding decks if its not enough
-		while (deck.length < (players.length + 1) * startingHandSize + 1) {
-			deck = addADeck(deck, numberOfDecks);
-			numberOfDecks++;
-		}
+		// // keep adding decks if its not enough
+		// while (deck.length < (players.length + 1) * startingHandSize + 1) {
+		// 	deck = addADeck(deck, numberOfDecks);
+		// 	numberOfDecks++;
+		// }
 
 		// give startingHandSize cards to everyone, assume deck has enough
 		players.forEach((player) => {
@@ -334,9 +361,9 @@
 		// 	}
 		// })
 		// playersRef.doc(game.currentPlayerID).get
-		playersRef
-			.doc(game.currentPlayerID)
-			.update({ hand: firebase.firestore.FieldValue.arrayUnion(cardToTake) });
+		playersRef.doc(game.currentPlayerID).update({
+			hand: firebase.firestore.FieldValue.arrayUnion(cardToTake),
+		});
 
 		// end turn
 
@@ -375,6 +402,12 @@
 			{cardClickHandler}
 		/>
 	{/each}
+
+	<input type="text" bind:value={expression} on:keyup={validateExpression} />
+
+	<button on:click={validateExpression}>Evaluate expression</button>
+
+	<p>{expressionValue}</p>
 {/if}
 <hr />
 <Inspect {title} {game} {players} {key} {playerID} />
