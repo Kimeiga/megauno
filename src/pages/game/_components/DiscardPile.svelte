@@ -14,7 +14,6 @@
 	}
 </script>
 
-<h4>discardPile</h4>
 <div class="deck">
 	{#each deck as card (card.value + card.suit + card.deckNumber)}
 		<div class="faceup-card">
@@ -43,7 +42,7 @@
 	} */
 
 	.deck {
-		display: flex;
+		display: inline-flex;
 		flex-direction: column-reverse;
 		max-height: 20px;
 		padding-bottom: 60px;

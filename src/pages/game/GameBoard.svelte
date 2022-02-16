@@ -80,7 +80,9 @@
 					// if they are disconnected, you can claim them
 					// if they are not, your name needs to be changed
 					let tempName = $playerName.slice(0, $playerName.length - 1);
-					let lastCharNumber = parseInt($playerName[$playerName.length - 1]);
+					let lastCharNumber = parseInt(
+						$playerName[$playerName.length - 1]
+					);
 					if (!isNaN(lastCharNumber)) {
 						// last character is number
 						tempName += lastCharNumber++;
@@ -135,21 +137,29 @@
 				reshuffleDiscardPileIntoDeck(deck);
 
 				if (deck.length >= startingHandSize - newHand.length) {
-					newHand += deck.splice(0, startingHandSize - newHand.length);
+					newHand += deck.splice(
+						0,
+						startingHandSize - newHand.length
+					);
 					playersRef.doc(playerID).update({ hand: newHand });
 					gameRef.update({ deck });
 				} else {
 					// oh no we have to introduce new cards (by addings cards from another deck haha)\
 					let numberOfDecks = game.numberOfDecks;
 					// keep adding decks if its not enough
-					while (deck.length < (players.length + 1) * startingHandSize + 1) {
+					while (
+						deck.length <
+						(players.length + 1) * startingHandSize + 1
+					) {
 						deck = addADeck(deck, numberOfDecks);
 						numberOfDecks++;
 					}
 					// gameRef.update({ numberOfDecks: numberOfDecks, deck });
 					console.log(playerID);
 
-					newHand.push(...deck.splice(0, startingHandSize - newHand.length));
+					newHand.push(
+						...deck.splice(0, startingHandSize - newHand.length)
+					);
 					playersRef.doc(playerID).update({ hand: newHand });
 					gameRef.update({ deck, numberOfDecks: numberOfDecks });
 				}
@@ -190,7 +200,8 @@
 			.then((querySnapshot) => {
 				// console.log(querySnapshot.docs[0].ref.id);
 				let newPlayerID = querySnapshot.docs[newPlayerIndex].ref.id;
-				let newPlayerName = querySnapshot.docs[newPlayerIndex].data().name;
+				let newPlayerName =
+					querySnapshot.docs[newPlayerIndex].data().name;
 				gameRef.update({
 					started: true,
 					currentPlayerID: newPlayerID,
@@ -200,24 +211,22 @@
 			});
 	}
 
-	// const suits = ["spades", "diamonds", "clubs", "hearts"];
-	// const values = [
-	// 	"A",
-	// 	"2",
-	// 	"3",
-	// 	"4",
-	// 	"5",
-	// 	"6",
-	// 	"7",
-	// 	"8",
-	// 	"9",
-	// 	"10",
-	// 	"J",
-	// 	"Q",
-	// 	"K",
-	// ];
-	const suits = ["spades"];
-	const values = ["A", "2"];
+	const suits = ["spades", "diamonds", "clubs", "hearts"];
+	const values = [
+		"A",
+		"2",
+		"3",
+		"4",
+		"5",
+		"6",
+		"7",
+		"8",
+		"9",
+		"10",
+		"J",
+		"Q",
+		"K",
+	];
 
 	function getDeck(deckNumber) {
 		var deck = new Array();
@@ -334,9 +343,9 @@
 		// 	}
 		// })
 		// playersRef.doc(game.currentPlayerID).get
-		playersRef
-			.doc(game.currentPlayerID)
-			.update({ hand: firebase.firestore.FieldValue.arrayUnion(cardToTake) });
+		playersRef.doc(game.currentPlayerID).update({
+			hand: firebase.firestore.FieldValue.arrayUnion(cardToTake),
+		});
 
 		// end turn
 
@@ -362,8 +371,8 @@
 		<h3>It's your turn!</h3>
 		<button on:click={endTurn(playersRef)}>End Turn</button>
 	{/if}
+	<br />
 	<Deck deck={game.deck} {deckClickHandler} />
-	Deck size: {game.deck.length}
 	<DiscardPile deck={game.discardPile} />
 
 	{#each players as player}

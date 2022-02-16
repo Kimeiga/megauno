@@ -12,7 +12,13 @@
 <h4>{playerName}'s hand</h4>
 <div class="deck">
 	{#each deck as card (card.value + card.suit + card.deckNumber)}
-		<HandCard {card} {faceUp} {discardPileTop} {cardClickHandler} hand={deck} />
+		<HandCard
+			{card}
+			{faceUp}
+			{discardPileTop}
+			{cardClickHandler}
+			hand={deck}
+		/>
 		<!-- <Hoverable let:hovering={active}>
 			<div class:active>
 				{#if active}
@@ -63,8 +69,9 @@
 
 	.deck {
 		display: flex;
-		max-width: 300px;
-		padding-left: 30px;
-		justify-content: space-evenly;
+		/* max-width: 300px; */
+		padding-left: 1rem;
+		justify-content: center;
+		flex-wrap: wrap;
 	}
 </style>

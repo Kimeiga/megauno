@@ -4,11 +4,10 @@
 	export let deckClickHandler = () => {};
 </script>
 
-<h4>deck</h4>
-
 <div class="deck" on:click={deckClickHandler}>
 	{#each deck as card (card.value + card.suit + card.deckNumber)}
 		<div class="facedown-card" />
+		<small style="position: absolute;">{deck.length}</small>
 	{/each}
 </div>
 
@@ -32,7 +31,7 @@
 	} */
 
 	.deck {
-		display: flex;
+		display: inline-flex;
 		flex-direction: column-reverse;
 		max-height: 20px;
 		padding-bottom: 60px;

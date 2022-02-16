@@ -34,28 +34,9 @@
 </main>
 
 <!-- Styles -->
-<!--<style>
+<style>
 	main {
 		text-align: center;
-		padding: 1em;
-		max-width: 240px;
 		margin: 0 auto;
 	}
-
-	h1,
-	em {
-		color: #ff3e00;
-	}
-
-	hr {
-		height: 1px;
-		border: none;
-		background: rgb(195, 195, 195);
-	}
-
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
-	}
-</style>-->
+</style>
