@@ -9,14 +9,14 @@ import "firebase/analytics";
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey: "AIzaSyCy2CnRPSQisQO4JMIUXZs9PlwlPOvCjCA",
-    authDomain: "megauno.firebaseapp.com",
-    projectId: "megauno",
-    storageBucket: "megauno.appspot.com",
-    messagingSenderId: "559730893311",
-    appId: "1:559730893311:web:8390c5674d6e1bbd9ac7ca",
-    measurementId: "G-5GP74FY121",
-};
+    apiKey: "AIzaSyAoMgQCuzqrIQc2E3Bus41YRsIDyhGGA1w",
+    authDomain: "aioaio.firebaseapp.com",
+    projectId: "aioaio",
+    storageBucket: "aioaio.appspot.com",
+    messagingSenderId: "69762931915",
+    appId: "1:69762931915:web:06a2a829d519e242e20f4e",
+    measurementId: "G-CVXLF6SDQY"
+  };
 
 firebase.initializeApp(firebaseConfig);
 
