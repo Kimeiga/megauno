@@ -2,9 +2,8 @@
   import { Router } from "@roxi/routify";
   import { routes } from "../.routify/routes";
 
-  // import { playerName, gamesIAmIn } from "store.js";
-  // playerName.useLocalStorage();
-  // gamesIAmIn.useLocalStorage();
+  import { username } from "store.js";
+  username.useLocalStorage();
 </script>
 
 <Router {routes} />

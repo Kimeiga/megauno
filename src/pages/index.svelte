@@ -1,7 +1,9 @@
 <script>
+  import Header from "./_components/Header.svelte";
+  import { username } from "../store.js";
   import { metatags } from "@roxi/routify";
-  metatags.title = "My Routify app";
-  metatags.description = "Description coming soon...";
+  // metatags.title = "aioaio";
+  // metatags.description = "aioaio";
 
   import { FirebaseApp, User, Doc, Collection } from "sveltefire";
 
@@ -12,20 +14,35 @@
   import "firebase/analytics";
 
   let postText;
+  // let username;
+  // let loggedIn = false;
 
   function post(postsRef) {
     postsRef.add({
+      username: $username,
       text: postText,
       createdAt: Date.now(),
     });
     postText = "";
+  }
+
+  function comment(commentsRef, postID) {
+    commentsRef.add({
+      username: $username,
+      text: document.getElementById(postID).value,
+      createdAt: Date.now(),
+    });
+    document.getElementById(postID).value = "";
   }
 </script>
 
 <main>
   <!-- 1. 🔥 Firebase App -->
   <FirebaseApp {firebase}>
-    <h1>Aioaio</h1>
+    <Header />
+
+    <!-- <input type="text" bind:value={username} />
+    <button>Set Username</button> -->
 
     <Collection
       path={"posts/"}
@@ -49,6 +66,7 @@
 
       {#each posts as post}
         <fieldset>
+          <small>{post.username}</small>
           <h3>{post.text}</h3>
 
           <small><em>{new Date(post.createdAt).toLocaleString()}</em></small>
@@ -61,6 +79,8 @@
             log
           >
             {#each comments as comment}
+              <small>{comment.username}</small>
+
               <p>{comment.text}</p>
             {/each}
             <span slot="loading">Loading comments...</span>
@@ -71,19 +91,11 @@
               id={post.id}
               on:keydown={(e) => {
                 if (e.key === "Enter") {
-                  commentsRef.add({
-                    text: document.getElementById(post.id).value,
-                    createdAt: Date.now(),
-                  });
+                  comment(commentsRef, post.id);
                 }
               }}
             />
-            <button
-              on:click={commentsRef.add({
-                text: document.getElementById(post.id).value,
-                createdAt: Date.now(),
-              })}>Comment</button
-            >
+            <button on:click={comment(commentsRef, post.id)}>Comment</button>
           </Collection>
         </fieldset>
       {/each}
